@@ -9,7 +9,6 @@
 
 
 // 定义容器的空间配置器，和C++标准库的allocator实现一样
-
 template<typename T>
 struct Allocator {
     T *allocate(size_t size)   // 负责开辟内存
@@ -22,12 +21,14 @@ struct Allocator {
       free(ptr);
     }
 
-    void construct(T *p, const T &val)  // 负责对象构造
-    {
-      new(p) T(val);
-    }
 
-    void destory(T *p) // 负责对象析构
+    template<class Ty>
+    void construct(T *p, Ty &&val)  // 合并左值、右值的对象构造
+    {
+      new(p) T(std::forward<Ty>(val));
+    }
+    
+    void destroy(T *p) // 负责对象析构
     {
       p->~T(); // ~T()代表了T类型的析构函数
     }
@@ -37,7 +38,6 @@ struct Allocator {
 /*
 容器底层内存开辟，内存释放，对象构造和析构，都通过allocator空间配置器来实现
  */
-
 template<typename T, typename Alloc=Allocator<T>>
 class vector {
 private:
@@ -49,7 +49,10 @@ private:
     {
       size_t size = _end - _first;
       T *tmp = _alloc.allocate(2 * size);
-      memcpy(tmp, _first, size * sizeof(T));
+      for (int i = 0; i < size; ++i) {
+        _alloc.construct(tmp + i, std::move(_first[i]));
+        _alloc.destroy(_first + i);
+      }
       _alloc.deallocate(_first);
       _first = tmp;
       _last = _first + size;
@@ -67,7 +70,7 @@ public:
     ~vector() {
       // 需要把对象析构和内存释放分开处理
       for (T *p = _first; p != _last; p++) {
-        _alloc.destory(p);
+        _alloc.destroy(p);
       }
       _alloc.deallocate(_first);
       _first = _end = _last = nullptr;
@@ -79,12 +82,12 @@ public:
       _end=_first+size;
       _last=_first+size;
       for(int i=0;i<size;i++){
-          _alloc.construct(_first+i,rhs._first[i]);
+        _alloc.construct(_first+i,rhs._first[i]);
       }
     }
 
 
-    vector(const vector<T> &&rhs){
+    vector(const vector<T> &&rhs) noexcept {
       _first=rhs._first;
       _end=rhs._end;
       _last=rhs._last;
@@ -105,47 +108,48 @@ public:
 
     vector<T>& operator=(const vector<T> &rhs){
       if(this==&rhs){
-          return *this;
+        return *this;
       }
       int size=rhs._end-rhs._first;
       _first=_alloc.allocate(size);
       _end=_first+size;
       _last=_first+size;
       for(int i=0;i<size;i++){
-          _alloc.construct(_first+i,rhs._first[i]);
+        _alloc.construct(_first+i,rhs._first[i]);
       }
       return *this;
     }
 
-    void push_back(const T &val) {
+    // 合并左值、右值引用的push_back
+    template<class Ty>
+    void push_back(Ty &&val) { // 接受右值的push_back
       if (_last == _end) {
         expand();
       }
-      _alloc.construct(_last, val);
+      _alloc.construct(_last, std::forward<Ty>(val));
       _last++;
     }
-
     void pop_back() {
       if (empty()) {
         return;
       }
-      _alloc.destory(--_last);
+      _alloc.destroy(--_last);
     }
 
-    T back() const {
+    [[nodiscard]] T back() const {
       return *(_last - 1);
     }
 
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
       return _first == _last;
     }
-    bool full() const {
+    [[nodiscard]] bool full() const {
       return _last == _end;
     }
-    int size() const {
+    [[nodiscard]] int size() const {
       return _last - _first;
     }
-    int capicity() const {
+    [[nodiscard]] int capicity() const {
       return _end - _first;
     }
     T& operator[] (int index) {
@@ -157,9 +161,9 @@ public:
 
     // 迭代器一般实现成容器的嵌套类型
     class iterator {
-        private:
+    private:
         T *_ptr; // 迭代器指向容器底层内存的某个位置
-        public:
+    public:
         iterator(T *ptr=nullptr) : _ptr(ptr) {}
         bool operator!=(const iterator &rhs) const {
           return _ptr != rhs._ptr;
@@ -176,6 +180,21 @@ public:
     }
     iterator end() {
       return iterator(_last);
+    }
+
+    void reserve(int i) {
+      if (i > capicity()) {
+        T *tmp = _alloc.allocate(i);
+        int size = _last - _first;
+        for (int j = 0; j < size; ++j) {
+          _alloc.construct(tmp + j, std::move(_first[j]));
+          _alloc.destroy(_first + j);
+        }
+        _alloc.deallocate(_first);
+        _first = tmp;
+        _last = _first + size;
+        _end = _first + i;
+      }
     }
 };
 
