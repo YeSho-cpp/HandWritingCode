@@ -129,6 +129,16 @@ public:
       _alloc.construct(_last, std::forward<Ty>(val));
       _last++;
     }
+
+    template<class... Args>
+    void emplace_back(Args&&... args) { // 直接构造对象的emplace_back
+        if (_last == _end) {
+            expand();
+        }
+        _alloc.construct(_last, std::forward<Args>(args)...);
+        _last++;
+    }
+
     void pop_back() {
       if (empty()) {
         return;
