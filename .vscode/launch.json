@@ -1,0 +1,40 @@
+{
+  // 使用 IntelliSense 了解相关属性。 
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+      //本文件只适用于单步调试时，也就是说如果你只想编译、运行、看结果，暂时不调试，可以先不管这个文件
+      //想调试时直接按 F5 即可。
+      {
+          "name": "c++ debug",
+          "type": "cppdbg",
+          "request": "launch",
+          "program": "${workspaceFolder}\\out\\${fileBasenameNoExtension}.exe",
+          "args": [],
+          "stopAtEntry": false,
+          "cwd": "${workspaceFolder}",
+          "environment": [],
+          "externalConsole": false,
+          "MIMode": "gdb",
+          //这个按自己要用的gdb.exe的路径为准
+          "miDebuggerPath": "/usr/bin/gdb",
+          "setupCommands": [
+              {
+                  "description": "为 gdb 启用整齐打印",
+                  "text": "-enable-pretty-printing",
+                  "ignoreFailures": true
+              }
+          ],
+          "preLaunchTask": "c++ build(g++)"
+      },
+      {
+        "name": "Launch Package",
+        "type": "go",
+        "request": "launch",
+        "mode": "auto",
+        "program": "${fileDirname}"
+      }
+
+  ]
+}
