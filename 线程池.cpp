@@ -1,16 +1,3 @@
-#include <algorithm>
-#include <cstddef>
-#include <iostream>
-#include <memory>
-#include <type_traits>
-#include <vector>
-#include <thread>
-#include <queue>
-#include <functional>
-#include <mutex>
-#include <condition_variable>
-#include <future>
-
 #include <iostream>
 #include <vector>
 #include <thread>
@@ -26,7 +13,8 @@ public:
     ~ThreadPool();
     
     template<class F, class... Args>
-    auto enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
+    auto enqueue(F&& f, Args&&... args) 
+        -> std::future<typename std::invoke_result_t<F, Args...>>;  // 注意这里
     
 private:
     std::vector<std::thread> workers;
@@ -69,10 +57,14 @@ ThreadPool::~ThreadPool() {
 }
 
 template<class F, class... Args>
-auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type> {
-    using return_type = typename std::result_of<F(Args...)>::type;
+auto ThreadPool::enqueue(F&& f, Args&&... args) 
+    -> std::future<typename std::invoke_result<F, Args...>::type> 
+{
+    using return_type = typename std::invoke_result<F, Args...>::type;
     
-    auto task = std::make_shared<std::packaged_task<return_type()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    auto task = std::make_shared<std::packaged_task<return_type()>>(
+        std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+    );
     
     std::future<return_type> res = task->get_future();
     {
@@ -85,7 +77,6 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<typename std::res
     condition.notify_one();
     return res;
 }
-
 int main() {
     ThreadPool pool(4);
 

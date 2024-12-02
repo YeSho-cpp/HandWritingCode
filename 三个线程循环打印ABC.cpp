@@ -2,9 +2,11 @@
 #include <thread>
 #include <mutex>
 
+using namespace std;
+
 std::mutex g_mtx;
 
-std::coniton_variable g_cv;
+std::condition_variable g_cv;
 std::string flag = "0";
 
 void PrintA(){

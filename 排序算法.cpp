@@ -120,3 +120,40 @@ void mergeSort(vector<int> &nums, int left, int right) {
     // 合并阶段
     merge(nums, left, mid, right);
 }
+
+/* 堆排序*/
+
+void heapify(vector<int> &nums, int n, int i) {
+    int largest = i; // 初始化最大值索引
+    int l = 2 * i + 1; // 左子节点索引
+    int r = 2 * i + 2; // 右子节点索引
+    // 找出三者中的最大值索引
+    if (l < n && nums[l] > nums[largest])
+        largest = l;
+    if (r < n && nums[r] > nums[largest])
+        largest = r;
+    // 若最大值索引不是父节点索引，则交换父节点与最大值节点
+    if (largest != i) {
+        swap(nums[i], nums[largest]);
+        // 递归调整子树
+        heapify(nums, n, largest);
+    }
+}
+
+void buildHeap(vector<int> &nums) {
+    int n = nums.size();
+    // 从最后一个非叶子节点开始，自底向上构建最大堆
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(nums, n, i);
+    }
+}
+
+void sortArray(vector<int> &nums) {
+    buildHeap(nums); // 构建最大堆
+    int n = nums.size();
+    // 逐步将堆顶元素（最大值）与堆尾元素交换，再调整堆
+    for (int i = n - 1; i > 0; i--) {
+        swap(nums[0], nums[i]);
+        heapify(nums, i, 0);
+    }
+}
