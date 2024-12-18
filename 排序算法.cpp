@@ -123,6 +123,18 @@ void mergeSort(vector<int> &nums, int left, int right) {
 
 /* 堆排序*/
 
+void siftUp(vector<int>&nums, int i){
+    while(i>0){
+        int parents=(i-1)/2;
+        if(nums[i]>nums[parents]){
+            swap(nums[i],nums[parents]);
+            i=parents;
+        }else{
+            break;
+        }
+    }
+}
+
 void heapify(vector<int> &nums, int n, int i) {
     int largest = i; // 初始化最大值索引
     int l = 2 * i + 1; // 左子节点索引
@@ -142,7 +154,7 @@ void heapify(vector<int> &nums, int n, int i) {
 
 void buildHeap(vector<int> &nums) {
     int n = nums.size();
-    // 从最后一个非叶子节点开始，自底向上构建最大堆
+    // 从最后一个非叶子节点开始，自底向下构建最大堆
     for (int i = n / 2 - 1; i >= 0; i--) {
         heapify(nums, n, i);
     }

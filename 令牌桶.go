@@ -4,8 +4,25 @@ import (
     "context"
     "sync"
     "time"
-		"fmt"
+	"fmt"
 )
+
+// todo 难点1 怎么以一定的速率放入令牌，开个线程背后去做，
+
+// func generateTokens(){
+//     ticker:=time.NewTicker(time.Millisecond*100)
+//     defer ticker.Stop()
+//     for{
+        
+//         select {
+//         case <-ticker.C:
+//             // 加锁计算比之前流逝的时间需要放多少令牌
+//         case :// 结果表示
+//             return
+//         }
+
+//     }
+// }
 
 // TokenBucket 令牌桶限流器
 type TokenBucket struct {
