@@ -59,6 +59,7 @@ shape* create_shape(shape_type type){
   }
 }
 
+/*引用计数*/
 class share_count{
 private:
     long m_count;
@@ -81,6 +82,7 @@ public:
  * 还要能用在布尔表达式
  */
 
+ /*share_ptr实现*/
 template<typename T>
 class smart_ptr{
 template <typename U>
@@ -190,6 +192,88 @@ smart_ptr<T>const_pointer_cast(
   T* ptr= const_cast<T*>(other.get());
   return smart_ptr<T>(other,ptr);
 }
+
+
+
+
+
+/* uniqueptr实现 */
+template <typename T>
+class UniquePtr {
+private:
+    T* m_ptr; // 原始指针
+
+public:
+    // 构造函数
+    explicit UniquePtr(T* ptr = nullptr) noexcept : m_ptr(ptr) {}
+    
+    // 禁用拷贝构造函数和拷贝赋值运算符
+    UniquePtr(const UniquePtr&) = delete;
+    UniquePtr& operator=(const UniquePtr&) = delete;
+    
+    // 移动构造函数
+    UniquePtr(UniquePtr&& other) noexcept : m_ptr(other.m_ptr) {
+        other.m_ptr = nullptr; // 防止原对象析构时释放资源
+    }
+    
+    // 移动赋值运算符
+    UniquePtr& operator=(UniquePtr&& other) noexcept {
+        if (this != &other) {
+            reset(); // 释放当前资源
+            m_ptr = other.m_ptr;
+            other.m_ptr = nullptr;
+        }
+        return *this;
+    }
+    
+    // 析构函数
+    ~UniquePtr() {
+        reset();
+    }
+    
+    // 解引用操作符
+    T& operator*() const {
+        return *m_ptr;
+    }
+    
+    // 箭头操作符
+    T* operator->() const {
+        return m_ptr;
+    }
+    
+    // 获取原始指针
+    T* get() const noexcept {
+        return m_ptr;
+    }
+    
+    // 释放所有权并返回原始指针
+    T* release() noexcept {
+        T* temp = m_ptr;
+        m_ptr = nullptr;
+        return temp;
+    }
+    
+    // 重置指针
+    void reset(T* ptr = nullptr) noexcept {
+        T* old_ptr = m_ptr;
+        m_ptr = ptr;
+        if (old_ptr) {
+            delete old_ptr;
+        }
+    }
+    
+    // 交换两个unique_ptr
+    void swap(UniquePtr& other) noexcept {
+        std::swap(m_ptr, other.m_ptr);
+    }
+    
+    // 布尔转换操作符
+    explicit operator bool() const noexcept {
+        return m_ptr != nullptr;
+    }
+};
+
+
 
 int main()
 {

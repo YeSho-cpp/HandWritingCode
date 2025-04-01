@@ -1,4 +1,4 @@
-#include <vector>
+#include <bits/stdc++.h>
 
 using namespace std;
 
@@ -105,6 +105,7 @@ void merge(vector<int> &nums, int left, int mid, int right) {
     // 将临时数组 tmp 中的元素复制回原数组 nums 的对应区间
     for (k = 0; k < tmp.size(); k++) {
         nums[left + k] = tmp[k];
+        
     }
 }
 
@@ -167,5 +168,138 @@ void sortArray(vector<int> &nums) {
     for (int i = n - 1; i > 0; i--) {
         swap(nums[0], nums[i]);
         heapify(nums, i, 0);
+    }
+}
+
+
+/*计数排序*/
+
+// 计数排序函数
+void countingSort(std::vector<int>& arr) {
+    // 如果数组为空或只有一个元素，直接返回
+    if (arr.size() <= 1) return;
+    
+    // 找出数组中的最大值和最小值
+    int max_val = *std::max_element(arr.begin(), arr.end());
+    int min_val = *std::min_element(arr.begin(), arr.end());
+    
+    // 计算值域范围
+    int range = max_val - min_val + 1;
+    
+    // 创建计数数组和输出数组
+    std::vector<int> count(range, 0);
+    std::vector<int> output(arr.size());
+    
+    // 统计每个元素出现的次数
+    for (int i = 0; i < arr.size(); i++) {
+        count[arr[i] - min_val]++;
+    }
+    
+    // 计算每个元素在输出数组中的位置
+    for (int i = 1; i < range; i++) {
+        count[i] += count[i - 1];
+    }
+    
+    // 构建输出数组
+    for (int i = arr.size() - 1; i >= 0; i--) {
+        output[count[arr[i] - min_val] - 1] = arr[i];
+        count[arr[i] - min_val]--;
+    }
+    
+    // 将排序结果复制回原数组
+    for (int i = 0; i < arr.size(); i++) {
+        arr[i] = output[i];
+    }
+}
+
+/*桶排序*/
+// 桶排序函数
+void bucketSort(std::vector<float>& arr) {
+    // 如果数组为空或只有一个元素，直接返回
+    if (arr.size() <= 1) return;
+    
+    // 找出数组中的最大值和最小值
+    float max_val = *std::max_element(arr.begin(), arr.end());
+    float min_val = *std::min_element(arr.begin(), arr.end());
+    
+    // 确定桶的数量，这里使用数组大小作为桶的数量
+    int bucket_count = arr.size();
+    
+    // 创建桶（使用list便于插入）
+    std::vector<std::list<float>> buckets(bucket_count);
+    
+    // 计算每个桶的范围
+    float range = (max_val - min_val) / bucket_count;
+    
+    // 将元素放入对应的桶中
+    for (int i = 0; i < arr.size(); i++) {
+        // 计算元素应该放入哪个桶
+        int bucket_index = (arr[i] - min_val) / range;
+        
+        // 处理边界情况，最大值应该放在最后一个桶
+        if (bucket_index == bucket_count) {
+            bucket_index--;
+        }
+        
+        buckets[bucket_index].push_back(arr[i]);
+    }
+    
+    // 对每个桶中的元素进行排序
+    for (int i = 0; i < bucket_count; i++) {
+        buckets[i].sort(); // list自带的排序方法
+    }
+    
+    // 合并所有桶中的元素
+    int index = 0;
+    for (int i = 0; i < bucket_count; i++) {
+        for (float val : buckets[i]) {
+            arr[index++] = val;
+        }
+    }
+}
+
+
+/*基数排序*/
+
+// 对数组按照指定位数进行计数排序
+void countingSortByDigit(std::vector<int>& arr, int exp) {
+    int n = arr.size();
+    std::vector<int> output(n);
+    std::vector<int> count(10, 0); // 10个可能的数字（0-9）
+    
+    // 统计每个数字出现的次数
+    for (int i = 0; i < n; i++) {
+        count[(arr[i] / exp) % 10]++;
+    }
+    
+    // 计算累积计数，确定每个数字的位置
+    for (int i = 1; i < 10; i++) {
+        count[i] += count[i - 1];
+    }
+    
+    // 从后向前遍历，构建输出数组
+    for (int i = n - 1; i >= 0; i--) {
+        int digit = (arr[i] / exp) % 10;
+        output[count[digit] - 1] = arr[i];
+        count[digit]--;
+    }
+    
+    // 将排序结果复制回原数组
+    for (int i = 0; i < n; i++) {
+        arr[i] = output[i];
+    }
+}
+
+// 基数排序函数
+void radixSort(std::vector<int>& arr) {
+    // 如果数组为空或只有一个元素，直接返回
+    if (arr.size() <= 1) return;
+    
+    // 找出最大值以确定最大位数
+    int max_val = *max_element(arr.begin(),arr.end());
+    
+    // 从最低位开始，对每一位进行计数排序
+    for (int exp = 1; max_val / exp > 0; exp *= 10) {
+        countingSortByDigit(arr, exp);
     }
 }

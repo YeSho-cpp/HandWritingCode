@@ -97,7 +97,7 @@ public:
     vector(const std::initializer_list<T>& init) {
       int size = init.size();
       _first = _alloc.allocate(size);
-      _end = _first + size;
+      _end = _first + size; 
       _last = _first + size;
       int i = 0;
       for (const T& val : init) {
